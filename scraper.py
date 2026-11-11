@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""IMDb scraping starter: search titles and print rating / plot.
+
+Uses requests + BeautifulSoup. IMDb may rate-limit or block automated
+requests; keep the volume low and respect robots.txt / the Terms of Use.
+"""
+import argparse
+import sys
+
+import requests
+from bs4 import BeautifulSoup
+
+BASE = "https://www.imdb.com"
+HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+
+
+def get(url):
+    r = requests.get(url, headers=HEADERS, timeout=20)
+    r.raise_for_status()
+    return BeautifulSoup(r.text, "html.parser")
+
+
+def search(query):
+    soup = get(BASE + "/find?q=" + requests.utils.quote(query))
+    out = []
+    for a in soup.select("a.ipc-metadata-list-summary-item__t")[:5]:
+        out.append((a.get_text(strip=True), a.get("href", "")))
+    return out
+
+
+def title_details(path):
+    soup = get(BASE + path)
+    title = soup.select_one("h1")
+    rating = soup.select_one('[data-testid="hero-rating-bar__aggregate-rating__score"] span')
+    summary = soup.select_one('[data-testid="plot-xs_to_m"] span')
+    return {
+        "title": title.get_text(strip=True) if title else "?",
+        "rating": rating.get_text(strip=True) if rating else "?",
+        "plot": summary.get_text(strip=True) if summary else "?",
+    }
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("query")
+    p.add_argument("--open", action="store_true", help="Fetch details for the first result")
+    args = p.parse_args()
+    results = search(args.query)
+    if not results:
+        print("No results for:", args.query, file=sys.stderr)
+        sys.exit(1)
+    for i, (title, href) in enumerate(results, 1):
+        print("%d. %s (%s)" % (i, title, href))
+    if args.open:
+        d = title_details(results[0][1])
+        print("\n%s | rating %s\n%s" % (d["title"], d["rating"], d["plot"]))
+
+
+if __name__ == "__main__":
+    main()
