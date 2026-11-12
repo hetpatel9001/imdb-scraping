@@ -6,6 +6,7 @@ requests; keep the volume low and respect robots.txt / the Terms of Use.
 """
 import argparse
 import sys
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,9 +16,16 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleW
 
 
 def get(url):
-    r = requests.get(url, headers=HEADERS, timeout=20)
-    r.raise_for_status()
-    return BeautifulSoup(r.text, "html.parser")
+    last = None
+    for attempt in range(3):
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            return BeautifulSoup(r.text, "html.parser")
+        except requests.RequestException as e:
+            last = e
+            time.sleep(1 * (attempt + 1))
+    raise last
 
 
 def search(query, limit=5):
