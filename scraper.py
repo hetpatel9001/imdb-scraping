@@ -5,6 +5,7 @@ Uses requests + BeautifulSoup. IMDb may rate-limit or block automated
 requests; keep the volume low and respect robots.txt / the Terms of Use.
 """
 import argparse
+import json
 import sys
 import time
 
@@ -52,12 +53,16 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("query")
     p.add_argument("--open", action="store_true", help="Fetch details for the first result")
+    p.add_argument("--json", action="store_true", help="Print results as JSON")
     p.add_argument("--limit", type=int, default=5, help="How many results to show")
     args = p.parse_args()
     results = search(args.query, args.limit)
     if not results:
         print("No results for:", args.query, file=sys.stderr)
         sys.exit(1)
+    if args.json:
+        print(json.dumps([{"title": t, "href": h} for t, h in results], indent=2))
+        return
     for i, (title, href) in enumerate(results, 1):
         print("%d. %s (%s)" % (i, title, href))
     if args.open:
