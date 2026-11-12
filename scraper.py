@@ -20,10 +20,10 @@ def get(url):
     return BeautifulSoup(r.text, "html.parser")
 
 
-def search(query):
+def search(query, limit=5):
     soup = get(BASE + "/find?q=" + requests.utils.quote(query))
     out = []
-    for a in soup.select("a.ipc-metadata-list-summary-item__t")[:5]:
+    for a in soup.select("a.ipc-metadata-list-summary-item__t")[:limit]:
         out.append((a.get_text(strip=True), a.get("href", "")))
     return out
 
@@ -44,8 +44,9 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("query")
     p.add_argument("--open", action="store_true", help="Fetch details for the first result")
+    p.add_argument("--limit", type=int, default=5, help="How many results to show")
     args = p.parse_args()
-    results = search(args.query)
+    results = search(args.query, args.limit)
     if not results:
         print("No results for:", args.query, file=sys.stderr)
         sys.exit(1)
