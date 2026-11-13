@@ -30,7 +30,7 @@ def get(url):
 
 
 def search(query, limit=5):
-    soup = get(BASE + "/find?q=" + requests.utils.quote(query))
+    soup = get(BASE + "/find?q=" + query)
     out = []
     for a in soup.select("a.ipc-metadata-list-summary-item__t")[:limit]:
         out.append((a.get_text(strip=True), a.get("href", "")))
