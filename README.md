@@ -13,6 +13,7 @@ rating, year and summary. Built on `requests` + `BeautifulSoup`.
 pip install -r requirements.txt
 python3 scraper.py "The Matrix"
 python3 scraper.py --open "Dune"
+python3 scraper.py --limit 10 --json "Dune"
 ```
 
 Note: IMDb changes its page markup from time to time — if the selectors in
